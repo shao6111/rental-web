@@ -15,6 +15,14 @@ type Room = {
   note: string | null
 }
 
+type RoomPhoto = {
+  id: number
+  roomId: number
+  photoUrl: string
+  description: string | null
+  createdAt: string
+}
+
 type ElectricityRecord = {
   id: number
   roomId: number
@@ -31,6 +39,14 @@ const rooms = ref<Room[]>([])
 const message = ref('')
 const API_BASE = 'https://rental-api-4w5a.onrender.com'
 const editingRoom = ref<Room | null>(null)
+
+const roomPhotos = ref<RoomPhoto[]>([])
+const showPhotoModal = ref(false)
+
+const photoForm = ref({
+  photoUrl: '',
+  description: ''
+})
 
 const selectedRoom = ref<Room | null>(null)
 const electricityRecords = ref<ElectricityRecord[]>([])
@@ -99,6 +115,87 @@ async function loadElectricityRecords(room: Room) {
     console.error(error)
     message.value = '讀取電費紀錄失敗'
   }
+}
+
+async function openPhotoModal(room: Room) {
+  selectedRoom.value = room
+  showPhotoModal.value = true
+  photoForm.value = {
+    photoUrl: '',
+    description: ''
+  }
+  await loadRoomPhotos(room.id)
+}
+
+async function loadRoomPhotos(roomId: number) {
+  try {
+    const response = await fetch(`${API_BASE}/api/rooms/${roomId}/photos`)
+    roomPhotos.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    alert('讀取房間照片失敗')
+  }
+}
+
+async function createRoomPhoto() {
+  if (!selectedRoom.value) return
+
+  if (!photoForm.value.photoUrl) {
+    alert('請輸入照片網址')
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/rooms/${selectedRoom.value.id}/photos`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(photoForm.value)
+    })
+
+    if (!response.ok) {
+      throw new Error('新增照片失敗')
+    }
+
+    photoForm.value = {
+      photoUrl: '',
+      description: ''
+    }
+
+    await loadRoomPhotos(selectedRoom.value.id)
+  } catch (error) {
+    console.error(error)
+    alert('新增照片失敗')
+  }
+}
+
+async function deleteRoomPhoto(photoId: number) {
+  if (!selectedRoom.value) return
+
+  const confirmed = confirm('確定要刪除這張照片嗎？')
+  if (!confirmed) return
+
+  try {
+    const response = await fetch(`${API_BASE}/api/room-photos/${photoId}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('刪除照片失敗')
+    }
+
+    await loadRoomPhotos(selectedRoom.value.id)
+  } catch (error) {
+    console.error(error)
+    alert('刪除照片失敗')
+  }
+}
+
+function closePhotoModal() {
+  showPhotoModal.value = false
+  selectedRoom.value = null
+  roomPhotos.value = []
 }
 
 async function createElectricityRecord() {
@@ -206,6 +303,7 @@ onMounted(() => {
         <p>備註：{{ room.note || '無' }}</p>
         <button class="edit-btn" @click="startEdit(room)">編輯</button>
         <button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
+        <button class="photo-btn" @click="openPhotoModal(room)">房間照片</button>
       </div>
     </div>
   </div>
@@ -257,6 +355,58 @@ onMounted(() => {
   </div>
 </div>
 
+<div v-if="showPhotoModal" class="modal">
+  <div class="modal-card">
+    <h2>房間照片 {{ selectedRoom?.roomNo }}</h2>
+
+    <div class="electric-form">
+      <label>照片網址</label>
+      <input
+        v-model="photoForm.photoUrl"
+        placeholder="請貼上照片網址"
+      />
+
+      <label>照片說明</label>
+      <input
+        v-model="photoForm.description"
+        placeholder="例如：未入住照片、浴室、床位"
+      />
+
+      <button class="save-btn" @click="createRoomPhoto">新增照片</button>
+    </div>
+
+    <div v-if="roomPhotos.length === 0">
+      <p>目前沒有房間照片</p>
+    </div>
+
+    <div v-if="roomPhotos.length > 0" class="photo-list">
+      <div
+        v-for="photo in roomPhotos"
+        :key="photo.id"
+        class="photo-item"
+      >
+        <img
+          :src="photo.photoUrl"
+          class="room-photo"
+          alt="房間照片"
+        />
+
+        <p>{{ photo.description || '無說明' }}</p>
+
+        <button
+          class="delete-btn"
+          @click="deleteRoomPhoto(photo.id)"
+        >
+          刪除
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" @click="closePhotoModal">關閉</button>
+    </div>
+  </div>
+</div>
 
 
 <div v-if="showElectricityModal" class="modal">
@@ -696,6 +846,51 @@ p {
   font-size: 14px;
   text-align: right;
   color: #333;
+}
+
+.photo-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  border: none;
+  border-radius: 16px;
+  background: #22c55e;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.photo-btn:hover {
+  background: #16a34a;
+}
+
+.photo-list {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.photo-item {
+  background: #fff7ed;
+  border-radius: 16px;
+  padding: 12px;
+  border: 1px solid #fed7aa;
+}
+
+.room-photo {
+  width: 100%;
+  max-height: 260px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 10px;
+}
+
+.photo-item p {
+  font-size: 18px;
+  margin: 8px 0;
+  color: #334155;
 }
 
 </style>
