@@ -51,6 +51,7 @@ const photoForm = ref({
 const selectedRoom = ref<Room | null>(null)
 const electricityRecords = ref<ElectricityRecord[]>([])
 const showElectricityModal = ref(false) 
+const allElectricityRecords = ref<ElectricityRecord[]>([])
 
 const electricityForm = ref({
   recordMonth: '',
@@ -290,6 +291,51 @@ function closeElectricityModal() {
   electricityRecords.value = []
 }
 
+async function loadAllElectricityRecords() {
+  try {
+    const response = await fetch(`${API_BASE}/api/electricity-records`)
+    allElectricityRecords.value = await response.json()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function getCurrentMonthString() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}`
+}
+
+function isElectricityReadingOverdue(room: Room) {
+  if (!room.contractStartDate) return false
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const contractDate = new Date(room.contractStartDate)
+  const contractDay = contractDate.getDate()
+
+  const year = today.getFullYear()
+  const month = today.getMonth()
+
+  const lastDayOfThisMonth = new Date(year, month + 1, 0).getDate()
+  const dueDay = Math.min(contractDay, lastDayOfThisMonth)
+
+  const dueDate = new Date(year, month, dueDay)
+  dueDate.setDate(dueDate.getDate() + 3)
+
+  const currentMonth = getCurrentMonthString()
+
+  const hasThisMonthReading = allElectricityRecords.value.some(record => {
+    return record.roomId === room.id &&
+      record.recordMonth?.startsWith(currentMonth) &&
+      record.currentReading != null
+  })
+
+  return today > dueDate && !hasThisMonthReading
+}
+
 async function loadRooms() {
   try {
     const response = await fetch(`${API_BASE}/api/rooms`)
@@ -302,7 +348,9 @@ async function loadRooms() {
 
 onMounted(() => {
   loadRooms()
+  loadAllElectricityRecords()
 })
+
 </script>
 
 <template>
@@ -328,6 +376,9 @@ onMounted(() => {
         <p>電話：{{ room.tenantPhone || '無' }}</p>
         <p>合約：{{ room.contractStartDate || '未設定' }} ～ {{ room.contractEndDate || '未設定' }}</p>
         <p>備註：{{ room.note || '無' }}</p>
+        <p v-if="isElectricityReadingOverdue(room)" class="electric-warning">
+  ⚠ 合約日已超過 3 天，尚未輸入本期度數
+</p>
         <button class="edit-btn" @click="startEdit(room)">編輯</button>
         <button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
         <button class="photo-btn" @click="openPhotoModal(room)">房間照片</button>
@@ -950,6 +1001,16 @@ p {
 }
 
 .electric-form input {
+  text-align: center;
+}
+
+.electric-warning {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-weight: bold;
   text-align: center;
 }
 
