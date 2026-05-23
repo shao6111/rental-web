@@ -98,9 +98,10 @@ async function saveRoom() {
     message.value = '房間資料已更新'
     editingRoom.value = null
     await loadRooms()
-  } catch (error) {
+    } catch (error) {
     console.error(error)
-    message.value = '修改房間資料失敗'
+    alert('新增電費紀錄失敗，請看 Render Logs')
+    message.value = '新增電費紀錄失敗'
   }
 }
 
@@ -223,6 +224,7 @@ async function createElectricityRecord() {
       note: ''
     }
 
+    alert('新增電費紀錄成功')
     await loadElectricityRecords(selectedRoom.value)
   } catch (error) {
     console.error(error)
