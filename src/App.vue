@@ -377,7 +377,7 @@ onMounted(() => {
         <p>合約：{{ room.contractStartDate || '未設定' }} ～ {{ room.contractEndDate || '未設定' }}</p>
         <p>備註：{{ room.note || '無' }}</p>
         <p v-if="isElectricityReadingOverdue(room)" class="electric-warning">
-  ⚠ 合約日已超過 3 天，尚未輸入本期度數
+  ⚠ 合約日已超過 3 天，尚未繳房租
 </p>
         <button class="edit-btn" @click="startEdit(room)">編輯</button>
         <button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
