@@ -112,6 +112,20 @@ async function loadElectricityRecords(room: Room) {
   try {
     const response = await fetch(`${API_BASE}/api/electricity-records/room/${room.id}`)
     electricityRecords.value = await response.json()
+
+    // 依月份排序，找最新一筆電費紀錄
+    const sortedRecords = [...electricityRecords.value].sort((a, b) => {
+      return String(b.recordMonth || '').localeCompare(String(a.recordMonth || ''))
+    })
+
+    const latestRecord = sortedRecords[0]
+
+    // 如果有上一筆紀錄，就自動把上一筆「本期度數」帶入這次「上期度數」
+    if (latestRecord && latestRecord.currentReading != null) {
+      electricityForm.value.previousReading = latestRecord.currentReading
+    } else {
+      electricityForm.value.previousReading = null
+    }
   } catch (error) {
     console.error(error)
     message.value = '讀取電費紀錄失敗'
