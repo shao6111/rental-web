@@ -940,4 +940,8 @@ p {
   min-height: 70px;
 }
 
+.electric-form input {
+  text-align: center;
+}
+
 </style>
