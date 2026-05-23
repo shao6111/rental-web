@@ -445,33 +445,29 @@ onMounted(() => {
 
   <label>上期度數</label>
   <input v-model.number="electricityForm.previousReading" type="number" />
-
-  <label>本期度數</label>
-  <input v-model.number="electricityForm.currentReading" type="number" />
+<label>本期度數</label>
+<input v-model.number="electricityForm.currentReading" type="number" />
 
 <div class="money-row">
-  <div class="money-field">
-    <label>每度電費單價</label>
+  <div class="money-field price-field">
+    <label>單價</label>
     <input v-model.number="electricityForm.pricePerUnit" type="number" />
   </div>
 
-  <div class="money-field">
-    <label>應繳電費金額</label>
+  <div class="money-field amount-field">
+    <label>電費</label>
     <div class="amount-box">
       {{ electricityAmountPreview }} 元
     </div>
   </div>
 </div>
 
-<label>這次應收總金額（房租加電費）</label>
+<label>總金額（房租加電費）</label>
 <div class="amount-box total-box">
   {{ totalReceivablePreview }} 元
 </div>
 
-<label>備註</label>
-<textarea v-model="electricityForm.note"></textarea>
-
-  <button class="save-btn" @click="createElectricityRecord">新增電費紀錄</button>
+<button class="save-btn" @click="createElectricityRecord">新增電費紀錄</button>
 </div>
     <div v-if="electricityRecords.length === 0">
       <p>目前沒有電費紀錄</p>
