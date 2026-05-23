@@ -933,12 +933,12 @@ p {
 }
 
 .total-box {
-  margin-top: 14px;
-  margin-bottom: 28px;
+  margin-top: 6px;
+  margin-bottom: 20px;
   font-weight: bold;
   color: #1f3b57;
   font-size: 40px;
-  min-height: 80px;
+  min-height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -946,7 +946,7 @@ p {
 }
 
 .electric-form label + .total-box {
-  margin-top: 18px;
+  margin-top: 6px;
 }
 
 .electric-form input {
