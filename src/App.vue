@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { createClient } from '@supabase/supabase-js'
 
 type Room = {
   id: number
@@ -23,6 +24,14 @@ type RoomPhoto = {
   createdAt: string
 }
 
+type ContractAttachment = {
+  id: number
+  roomId: number
+  fileUrl: string
+  description: string | null
+  createdAt: string
+}
+
 type ElectricityRecord = {
   id: number
   roomId: number
@@ -38,6 +47,9 @@ type ElectricityRecord = {
 const rooms = ref<Room[]>([])
 const message = ref('')
 const API_BASE = 'https://rental-api-4w5a.onrender.com'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 const editingRoom = ref<Room | null>(null)
 
 const roomPhotos = ref<RoomPhoto[]>([])
@@ -45,6 +57,15 @@ const showPhotoModal = ref(false)
 
 const photoForm = ref({
   photoUrl: '',
+  description: ''
+})
+
+const contractAttachments = ref<ContractAttachment[]>([])
+const showContractModal = ref(false)
+const contractFile = ref<File | null>(null)
+const isUploadingContract = ref(false)
+
+const contractForm = ref({
   description: ''
 })
 
@@ -231,6 +252,124 @@ function closePhotoModal() {
   roomPhotos.value = []
 }
 
+async function openContractModal(room: Room) {
+  selectedRoom.value = room
+  showContractModal.value = true
+  contractFile.value = null
+  contractForm.value = {
+    description: ''
+  }
+  await loadContractAttachments(room.id)
+}
+
+async function loadContractAttachments(roomId: number) {
+  try {
+    const response = await fetch(`${API_BASE}/api/rooms/${roomId}/contracts`)
+    contractAttachments.value = await response.json()
+  } catch (error) {
+    console.error(error)
+    alert('讀取合約附件失敗')
+  }
+}
+
+function handleContractFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) {
+    contractFile.value = null
+    return
+  }
+
+  contractFile.value = file
+}
+
+async function uploadContractAttachment() {
+  if (!selectedRoom.value) return
+
+  if (!contractFile.value) {
+    alert('請先選擇或拍攝合約照片')
+    return
+  }
+
+  try {
+    isUploadingContract.value = true
+
+    const file = contractFile.value
+    const fileExt = file.name.split('.').pop()
+    const filePath = `room-${selectedRoom.value.id}/${Date.now()}.${fileExt}`
+
+    const { error } = await supabase.storage
+      .from('contracts')
+      .upload(filePath, file)
+
+    if (error) {
+      throw error
+    }
+
+    const { data } = supabase.storage
+      .from('contracts')
+      .getPublicUrl(filePath)
+
+    const response = await fetch(`${API_BASE}/api/rooms/${selectedRoom.value.id}/contracts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        fileUrl: data.publicUrl,
+        description: contractForm.value.description
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('新增合約附件失敗')
+    }
+
+    contractFile.value = null
+    contractForm.value = {
+      description: ''
+    }
+
+    await loadContractAttachments(selectedRoom.value.id)
+    alert('合約附件上傳成功')
+  } catch (error) {
+    console.error(error)
+    alert('合約附件上傳失敗')
+  } finally {
+    isUploadingContract.value = false
+  }
+}
+
+async function deleteContractAttachment(id: number) {
+  if (!selectedRoom.value) return
+
+  const confirmed = confirm('確定要刪除這份合約附件嗎？')
+  if (!confirmed) return
+
+  try {
+    const response = await fetch(`${API_BASE}/api/contract-attachments/${id}`, {
+      method: 'DELETE'
+    })
+
+    if (!response.ok) {
+      throw new Error('刪除合約附件失敗')
+    }
+
+    await loadContractAttachments(selectedRoom.value.id)
+  } catch (error) {
+    console.error(error)
+    alert('刪除合約附件失敗')
+  }
+}
+
+function closeContractModal() {
+  showContractModal.value = false
+  selectedRoom.value = null
+  contractAttachments.value = []
+  contractFile.value = null
+}
+
 async function createElectricityRecord() {
   if (!selectedRoom.value) return
 
@@ -382,6 +521,7 @@ onMounted(() => {
         <button class="edit-btn" @click="startEdit(room)">編輯</button>
         <button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
         <button class="photo-btn" @click="openPhotoModal(room)">房間照片</button>
+        <button class="contract-btn" @click="openContractModal(room)">合約附件</button>
       </div>
     </div>
   </div>
@@ -486,6 +626,66 @@ onMounted(() => {
   </div>
 </div>
 
+<div v-if="showContractModal" class="modal">
+  <div class="modal-card">
+    <h2>合約附件 {{ selectedRoom?.roomNo }}</h2>
+
+    <div class="electric-form">
+      <label>拍照或選擇合約照片</label>
+      <input
+        type="file"
+        accept="image/*"
+        capture="environment"
+        @change="handleContractFileChange"
+      />
+
+      <label>附件說明</label>
+      <input
+        v-model="contractForm.description"
+        placeholder="例如：租約第1頁、身分證影本、簽名頁"
+      />
+
+      <button
+        class="save-btn"
+        @click="uploadContractAttachment"
+        :disabled="isUploadingContract"
+      >
+        {{ isUploadingContract ? '上傳中...' : '上傳合約附件' }}
+      </button>
+    </div>
+
+    <div v-if="contractAttachments.length === 0">
+      <p>目前沒有合約附件</p>
+    </div>
+
+    <div v-if="contractAttachments.length > 0" class="photo-list">
+      <div
+        v-for="contract in contractAttachments"
+        :key="contract.id"
+        class="photo-item"
+      >
+        <img
+          :src="contract.fileUrl"
+          class="room-photo"
+          alt="合約附件"
+        />
+
+        <p>{{ contract.description || '無說明' }}</p>
+
+        <button
+          class="delete-btn"
+          @click="deleteContractAttachment(contract.id)"
+        >
+          刪除
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel-btn" @click="closeContractModal">關閉</button>
+    </div>
+  </div>
+</div>
 
 <div v-if="showElectricityModal" class="modal">
   <div class="modal-card">
@@ -1012,6 +1212,23 @@ p {
   color: #b91c1c;
   font-weight: bold;
   text-align: center;
+}
+
+.contract-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  border: none;
+  border-radius: 16px;
+  background: #7c3aed;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.contract-btn:hover {
+  background: #6d28d9;
 }
 
 </style>
