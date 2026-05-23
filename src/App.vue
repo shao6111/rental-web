@@ -70,6 +70,23 @@ const maxUsedUnits = computed(() => {
   return max === 0 ? 1 : max
 })
 
+const electricityAmountPreview = computed(() => {
+  const previous = electricityForm.value.previousReading
+  const current = electricityForm.value.currentReading
+  const price = electricityForm.value.pricePerUnit
+
+  if (previous == null || current == null || price == null) {
+    return 0
+  }
+
+  const usedUnits = current - previous
+  return usedUnits > 0 ? usedUnits * price : 0
+})
+
+const totalReceivablePreview = computed(() => {
+  const rent = selectedRoom.value?.rent ?? 0
+  return rent + electricityAmountPreview.value
+})
 
 function startEdit(room: Room) {
   editingRoom.value = { ...room }
@@ -432,11 +449,27 @@ onMounted(() => {
   <label>本期度數</label>
   <input v-model.number="electricityForm.currentReading" type="number" />
 
-  <label>每度電費</label>
-  <input v-model.number="electricityForm.pricePerUnit" type="number" />
+<div class="money-row">
+  <div class="money-field">
+    <label>每度電費單價</label>
+    <input v-model.number="electricityForm.pricePerUnit" type="number" />
+  </div>
 
-  <label>備註</label>
-  <textarea v-model="electricityForm.note"></textarea>
+  <div class="money-field">
+    <label>應繳電費金額</label>
+    <div class="amount-box">
+      {{ electricityAmountPreview }} 元
+    </div>
+  </div>
+</div>
+
+<label>這次應收總金額（房租加電費）</label>
+<div class="amount-box total-box">
+  {{ totalReceivablePreview }} 元
+</div>
+
+<label>備註</label>
+<textarea v-model="electricityForm.note"></textarea>
 
   <button class="save-btn" @click="createElectricityRecord">新增電費紀錄</button>
 </div>
