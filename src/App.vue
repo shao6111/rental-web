@@ -932,4 +932,12 @@ p {
   color: #334155;
 }
 
+.total-box {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #1f3b57;
+  font-size: 40px;
+  min-height: 70px;
+}
+
 </style>
