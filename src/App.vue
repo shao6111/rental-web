@@ -933,11 +933,20 @@ p {
 }
 
 .total-box {
-  margin-bottom: 10px;
+  margin-top: 14px;
+  margin-bottom: 28px;
   font-weight: bold;
   color: #1f3b57;
   font-size: 40px;
-  min-height: 70px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.electric-form label + .total-box {
+  margin-top: 18px;
 }
 
 .electric-form input {
