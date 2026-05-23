@@ -946,7 +946,7 @@ p {
 }
 
 .electric-form label + .total-box {
-  margin-top: 6px;
+  margin-top: 2px;
 }
 
 .electric-form input {
