@@ -202,20 +202,14 @@ async function createElectricityRecord() {
   if (!selectedRoom.value) return
 
   try {
-    const response = await fetch(`${API_BASE}/api/electricity-records`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        roomId: selectedRoom.value.id,
-        recordMonth: electricityForm.value.recordMonth,
-        previousReading: electricityForm.value.previousReading,
-        currentReading: electricityForm.value.currentReading,
-        pricePerUnit: electricityForm.value.pricePerUnit,
-        note: electricityForm.value.note
-      })
-    })
+    
+    const response = await fetch(`${API_BASE}/api/electricity-records/room/${selectedRoom.value.id}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(electricityForm.value)
+})
 
     if (!response.ok) {
       throw new Error('新增電費失敗')
