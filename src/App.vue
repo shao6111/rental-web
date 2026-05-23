@@ -933,12 +933,12 @@ p {
 }
 
 .total-box {
-  margin-top: 6px;
-  margin-bottom: 20px;
+  margin-top: 2px;
+  margin-bottom: 12px;
   font-weight: bold;
   color: #1f3b57;
   font-size: 40px;
-  min-height: 70px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
