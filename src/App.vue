@@ -547,33 +547,37 @@ onMounted(() => {
 
     <p v-if="message" class="message">{{ message }}</p>
 
-    <div class="room-grid">
-      <div v-for="room in sortedRooms" :key="room.id" class="room-card"></div>
-        <div class="room-header">
-          <h2>{{ room.roomNo }}</h2>
-          <span :class="['status', room.status === '已入住' ? 'occupied' : 'empty']">
-            {{ room.status }}
-          </span>
-        </div>
-
-        <p>房型：{{ room.roomType }}</p>
-        <p>租金：{{ room.rent ?? '未設定' }}</p>
-        <p>押金：{{ room.deposit ?? '未設定' }}</p>
-        <p>房客：{{ room.tenantName || '未入住' }}</p>
-        <p>電話：{{ room.tenantPhone || '無' }}</p>
-        <p>合約：{{ room.contractStartDate || '未設定' }} ～ {{ room.contractEndDate || '未設定' }}</p>
-        <p>備註：{{ room.note || '無' }}</p>
-        <p v-if="isElectricityReadingOverdue(room)" class="electric-warning">
-  ⚠ 合約日已超過 3 天，尚未繳房租
-</p>
-        <button class="edit-btn" @click="startEdit(room)">編輯</button>
-        <button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
-        <button class="photo-btn" @click="openPhotoModal(room)">房間照片</button>
-        <button class="contract-btn" @click="openContractModal(room)">合約附件</button>
-      </div>
+ <div class="room-grid">
+  <div v-for="room in sortedRooms" :key="room.id" class="room-card">
+    <div class="room-header">
+      <h2>{{ room.roomNo }}</h2>
+      <span :class="['status', room.status === '已入住' ? 'occupied' : 'empty']">
+        {{ room.status }}
+      </span>
     </div>
+
+    <p>房型：{{ room.roomType }}</p>
+    <p>租金：{{ room.rent ?? '未設定' }}</p>
+    <p>押金：{{ room.deposit ?? '未設定' }}</p>
+    <p>房客：{{ room.tenantName || '未入住' }}</p>
+    <p>電話：{{ room.tenantPhone || '無' }}</p>
+    <p>合約：{{ room.contractStartDate || '未設定' }} ～ {{ room.contractEndDate || '未設定' }}</p>
+    <p>備註：{{ room.note || '無' }}</p>
+
+    <p v-if="isElectricityReadingOverdue(room)" class="electric-warning">
+      ⚠ 合約日已超過 3 天，尚未繳房租
+    </p>
+
+   <button class="edit-btn" @click="startEdit(room)">編輯</button>
+<button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
+<button class="photo-btn" @click="openPhotoModal(room)">房間照片</button>
+<button class="contract-btn" @click="openContractModal(room)">合約附件</button>
   </div>
-  <div v-if="editingRoom" class="modal">
+</div>
+</div>
+
+<div v-if="editingRoom" class="modal">
+
   <div class="modal-card">
     <h2>編輯房間 {{ editingRoom.roomNo }}</h2>
 
