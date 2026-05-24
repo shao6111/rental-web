@@ -120,6 +120,31 @@ const totalReceivablePreview = computed(() => {
   return rent + electricityAmountPreview.value
 })
 
+const summaryStats = computed(() => {
+  const occupiedRooms = rooms.value.filter(room => room.status === '已入住')
+  const emptyRooms = rooms.value.filter(room => room.status === '空房')
+  const currentMonth = getCurrentMonthString()
+
+  const monthlyRentReceivable = occupiedRooms.reduce((sum, room) => {
+    return sum + (room.rent ?? 0)
+  }, 0)
+
+  const monthlyElectricityReceivable = allElectricityRecords.value
+    .filter(record => record.recordMonth?.startsWith(currentMonth))
+    .reduce((sum, record) => {
+      return sum + (record.totalAmount ?? 0)
+    }, 0)
+
+  return {
+    totalRooms: rooms.value.length,
+    occupiedCount: occupiedRooms.length,
+    emptyCount: emptyRooms.length,
+    monthlyRentReceivable,
+    monthlyElectricityReceivable,
+    totalReceivable: monthlyRentReceivable + monthlyElectricityReceivable
+  }
+})
+
 function startEdit(room: Room) {
   editingRoom.value = { ...room }
 }
@@ -543,10 +568,47 @@ onMounted(() => {
 <template>
   <div class="page">
     <h1>租房管理系統</h1>
-    <p class="subtitle">房間列表</p>
+<p class="subtitle">房間列表</p>
 
-    <p v-if="message" class="message">{{ message }}</p>
+<div class="summary-grid">
+  <div class="summary-card">
+    <p class="summary-label">總房間數</p>
+    <p class="summary-value">{{ summaryStats.totalRooms }}</p>
+  </div>
 
+  <div class="summary-card">
+    <p class="summary-label">已入住</p>
+    <p class="summary-value occupied-text">{{ summaryStats.occupiedCount }}</p>
+  </div>
+
+  <div class="summary-card">
+    <p class="summary-label">空房</p>
+    <p class="summary-value empty-text">{{ summaryStats.emptyCount }}</p>
+  </div>
+
+  <div class="summary-card">
+    <p class="summary-label">本月應收房租</p>
+    <p class="summary-value money-text">
+      {{ summaryStats.monthlyRentReceivable.toLocaleString() }} 元
+    </p>
+  </div>
+
+  <div class="summary-card">
+    <p class="summary-label">本月應收電費</p>
+    <p class="summary-value money-text">
+      {{ summaryStats.monthlyElectricityReceivable.toLocaleString() }} 元
+    </p>
+  </div>
+
+  <div class="summary-card total-summary">
+    <p class="summary-label">本月預估總收入</p>
+    <p class="summary-value total-money">
+      {{ summaryStats.totalReceivable.toLocaleString() }} 元
+    </p>
+  </div>
+</div>
+
+<p v-if="message" class="message">{{ message }}</p>
  <div class="room-grid">
   <div v-for="room in sortedRooms" :key="room.id" class="room-card">
     <div class="room-header">
@@ -1120,6 +1182,35 @@ p {
   .trend-row {
   grid-template-columns: 1fr;
   gap: 4px;
+
+.summary-grid {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.summary-card {
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.summary-label {
+  font-size: 15px;
+}
+
+.summary-value {
+  font-size: 24px;
+}
+
+.money-text,
+.total-money {
+  font-size: 20px;
+}
+
+.total-summary {
+  grid-column: span 2;
+}
+
 }
 
 .trend-month,
@@ -1282,6 +1373,60 @@ p {
 
 .contract-btn:hover {
   background: #6d28d9;
+}
+
+.summary-grid {
+  max-width: 1100px;
+  margin: 0 auto 24px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.summary-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+
+.summary-label {
+  margin: 0 0 8px 0;
+  text-align: center;
+  color: #64748b;
+  font-size: 15px;
+}
+
+.summary-value {
+  margin: 0;
+  text-align: center;
+  color: #1f3b57;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.occupied-text {
+  color: #dc2626;
+}
+
+.empty-text {
+  color: #059669;
+}
+
+.money-text {
+  color: #2563eb;
+  font-size: 24px;
+}
+
+.total-summary {
+  background: #fff7ed;
+  border: 2px solid #fed7aa;
+}
+
+.total-money {
+  color: #ea580c;
+  font-size: 28px;
 }
 
 </style>
