@@ -60,6 +60,8 @@ const photoForm = ref({
   description: ''
 })
 
+const roomPhotoFile = ref<File | null>(null)
+const uploadingRoomPhoto = ref(false)
 const contractAttachments = ref<ContractAttachment[]>([])
 const showContractModal = ref(false)
 const contractFile = ref<File | null>(null)
@@ -191,36 +193,73 @@ async function loadRoomPhotos(roomId: number) {
   }
 }
 
-async function createRoomPhoto() {
+function handleRoomPhotoFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (!file) {
+    roomPhotoFile.value = null
+    return
+  }
+
+  roomPhotoFile.value = file
+}
+
+async function uploadRoomPhoto() {
   if (!selectedRoom.value) return
 
-  if (!photoForm.value.photoUrl) {
-    alert('請輸入照片網址')
+  if (!roomPhotoFile.value) {
+    alert('請先選擇或拍攝房間照片')
     return
   }
 
   try {
+    uploadingRoomPhoto.value = true
+
+    const file = roomPhotoFile.value
+    const fileExt = file.name.split('.').pop()
+    const filePath = `room-${selectedRoom.value.id}/${Date.now()}.${fileExt}`
+
+    const { error } = await supabase.storage
+      .from('room-photos')
+      .upload(filePath, file)
+
+    if (error) {
+      throw error
+    }
+
+    const { data } = supabase.storage
+      .from('room-photos')
+      .getPublicUrl(filePath)
+
     const response = await fetch(`${API_BASE}/api/rooms/${selectedRoom.value.id}/photos`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(photoForm.value)
+      body: JSON.stringify({
+        photoUrl: data.publicUrl,
+        description: photoForm.value.description
+      })
     })
 
     if (!response.ok) {
-      throw new Error('新增照片失敗')
+      throw new Error('新增房間照片失敗')
     }
 
+    roomPhotoFile.value = null
     photoForm.value = {
       photoUrl: '',
       description: ''
     }
 
     await loadRoomPhotos(selectedRoom.value.id)
+    alert('房間照片上傳成功')
   } catch (error) {
     console.error(error)
-    alert('新增照片失敗')
+    alert('房間照片上傳失敗')
+  } finally {
+    uploadingRoomPhoto.value = false
   }
 }
 
@@ -250,6 +289,7 @@ function closePhotoModal() {
   showPhotoModal.value = false
   selectedRoom.value = null
   roomPhotos.value = []
+  roomPhotoFile.value = null
 }
 
 async function openContractModal(room: Room) {
@@ -578,19 +618,20 @@ onMounted(() => {
     <h2>房間照片 {{ selectedRoom?.roomNo }}</h2>
 
     <div class="electric-form">
-      <label>照片網址</label>
-      <input
-        v-model="photoForm.photoUrl"
-        placeholder="請貼上照片網址"
-      />
+      <label>拍照或選擇房間照片</label>
+<input
+  type="file"
+  accept="image/*"
+  capture="environment"
+  @change="handleRoomPhotoFileChange"
+/>
 
-      <label>照片說明</label>
-      <input
-        v-model="photoForm.description"
-        placeholder="例如：未入住照片、浴室、床位"
-      />
+<label>照片說明</label>
+<input v-model="photoForm.description" placeholder="例如：未入住照片、浴室、床位" />
 
-      <button class="save-btn" @click="createRoomPhoto">新增照片</button>
+<button class="upload-btn" @click="uploadRoomPhoto" :disabled="uploadingRoomPhoto">
+  {{ uploadingRoomPhoto ? '上傳中...' : '上傳房間照片' }}
+</button>
     </div>
 
     <div v-if="roomPhotos.length === 0">
