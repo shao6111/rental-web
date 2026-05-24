@@ -45,6 +45,14 @@ type ElectricityRecord = {
 }
 
 const rooms = ref<Room[]>([])
+const sortedRooms = computed(() => {
+  return [...rooms.value].sort((a, b) => {
+    return a.roomNo.localeCompare(b.roomNo, 'zh-Hant', {
+      numeric: true,
+      sensitivity: 'base'
+    })
+  })
+})
 const message = ref('')
 const API_BASE = 'https://rental-api-4w5a.onrender.com'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -540,7 +548,7 @@ onMounted(() => {
     <p v-if="message" class="message">{{ message }}</p>
 
     <div class="room-grid">
-      <div v-for="room in rooms" :key="room.id" class="room-card">
+      <div v-for="room in sortedRooms" :key="room.id" class="room-card"></div>
         <div class="room-header">
           <h2>{{ room.roomNo }}</h2>
           <span :class="['status', room.status === '已入住' ? 'occupied' : 'empty']">
