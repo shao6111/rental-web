@@ -519,6 +519,49 @@ function getCurrentMonthString() {
   return `${year}-${month}`
 }
 
+function getContractWarning(room: Room) {
+  if (!room.contractEndDate) return null
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const endDate = new Date(room.contractEndDate)
+  endDate.setHours(0, 0, 0, 0)
+
+  const diffTime = endDate.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays < 0) {
+    return {
+      text: `⚠ 合約已到期 ${Math.abs(diffDays)} 天`,
+      className: 'contract-expired'
+    }
+  }
+
+  if (diffDays === 0) {
+    return {
+      text: '⚠ 合約今天到期',
+      className: 'contract-expired'
+    }
+  }
+
+  if (diffDays <= 7) {
+    return {
+      text: `⚠ 合約剩 ${diffDays} 天到期`,
+      className: 'contract-danger'
+    }
+  }
+
+  if (diffDays <= 30) {
+    return {
+      text: `提醒：合約剩 ${diffDays} 天到期`,
+      className: 'contract-soon'
+    }
+  }
+
+  return null
+}
+
 function isElectricityReadingOverdue(room: Room) {
   if (!room.contractStartDate) return false
 
@@ -629,6 +672,13 @@ onMounted(() => {
     <p v-if="isElectricityReadingOverdue(room)" class="electric-warning">
       ⚠ 合約日已超過 3 天，尚未繳房租
     </p>
+    
+    <p
+  v-if="getContractWarning(room)"
+  :class="['contract-warning', getContractWarning(room)?.className]"
+>
+  {{ getContractWarning(room)?.text }}
+</p>
 
    <button class="edit-btn" @click="startEdit(room)">編輯</button>
 <button class="electric-btn" @click="loadElectricityRecords(room)">電費紀錄</button>
@@ -1356,6 +1406,29 @@ p {
   color: #b91c1c;
   font-weight: bold;
   text-align: center;
+}
+
+.contract-warning {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.contract-soon {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.contract-danger {
+  background: #fed7aa;
+  color: #c2410c;
+}
+
+.contract-expired {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .contract-btn {
