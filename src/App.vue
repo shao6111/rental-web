@@ -85,12 +85,13 @@ const showElectricityModal = ref(false)
 const allElectricityRecords = ref<ElectricityRecord[]>([])
 
 const electricityForm = ref({
-  recordMonth: '',
+  recordMonth: getTodayDateString(),
   previousReading: null as number | null,
   currentReading: null as number | null,
   pricePerUnit: 5,
   note: ''
 })
+
 
 const maxUsedUnits = computed(() => {
   if (electricityRecords.value.length === 0) return 1
@@ -182,6 +183,8 @@ async function saveRoom() {
 async function loadElectricityRecords(room: Room) {
   selectedRoom.value = room
   showElectricityModal.value = true
+  electricityForm.value.recordMonth = getTodayDateString()
+
 
   try {
     const response = await fetch(`${API_BASE}/api/electricity-records/room/${room.id}`)
@@ -461,7 +464,7 @@ async function createElectricityRecord() {
     }
 
     electricityForm.value = {
-      recordMonth: '',
+      recordMonth:  getTodayDateString(),
       previousReading: null,
       currentReading: null,
       pricePerUnit: 5,
@@ -510,6 +513,14 @@ async function loadAllElectricityRecords() {
   } catch (error) {
     console.error(error)
   }
+}
+
+function getTodayDateString() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 function getCurrentMonthString() {
