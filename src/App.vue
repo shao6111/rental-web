@@ -1252,22 +1252,23 @@ p {
 }
 
 .summary-card {
-  padding: 10px 14px;
-  min-height: 48px;
-  border-radius: 14px;
+  padding: 8px 12px;
+  min-height: 42px;
+  border-radius: 12px;
 }
 
 .summary-label {
-  font-size: 17px;
+  font-size: 19px;
+  font-weight: 600;
 }
 
 .summary-value {
-  font-size: 24px;
+  font-size: 30px;
 }
 
 .money-text,
 .total-money {
-  font-size: 22px;
+  font-size: 28px;
 }
 
 .total-summary {
@@ -1469,28 +1470,29 @@ p {
 
 .summary-card {
   background: #ffffff;
-  border-radius: 16px;
-  padding: 12px 16px;
-  min-height: 58px;
+  border-radius: 14px;
+  padding: 8px 14px;
+  min-height: 44px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   text-align: left;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
 }
 
 .summary-label {
   margin: 0;
   text-align: left;
   color: #64748b;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
 .summary-value {
   margin: 0;
   text-align: right;
   color: #1f3b57;
-  font-size: 26px;
+  font-size: 30px;
   font-weight: bold;
   white-space: nowrap;
 }
