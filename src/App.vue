@@ -1243,20 +1243,22 @@ p {
   .trend-row {
   grid-template-columns: 1fr;
   gap: 4px;
+}
 
 .summary-grid {
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 18px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .summary-card {
-  padding: 12px;
+  padding: 10px 14px;
+  min-height: 48px;
   border-radius: 14px;
 }
 
 .summary-label {
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .summary-value {
@@ -1265,13 +1267,11 @@ p {
 
 .money-text,
 .total-money {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 .total-summary {
-  grid-column: span 2;
-}
-
+  grid-column: auto;
 }
 
 .trend-month,
@@ -1461,33 +1461,38 @@ p {
 
 .summary-grid {
   max-width: 1100px;
-  margin: 0 auto 24px auto;
+  margin: 0 auto 18px auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
 }
 
 .summary-card {
   background: #ffffff;
   border-radius: 16px;
-  padding: 16px;
-  text-align: center;
+  padding: 12px 16px;
+  min-height: 58px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  text-align: left;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
 }
 
 .summary-label {
-  margin: 0 0 8px 0;
-  text-align: center;
+  margin: 0;
+  text-align: left;
   color: #64748b;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .summary-value {
   margin: 0;
-  text-align: center;
+  text-align: right;
   color: #1f3b57;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .occupied-text {
